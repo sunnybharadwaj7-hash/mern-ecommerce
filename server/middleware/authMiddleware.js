@@ -1,0 +1,41 @@
+// middleware/authMiddleware.js
+// (existing protect function stays exactly as it was — just adding a new one below it)
+
+const jwt = require('jsonwebtoken');
+const User = require('../models/User');
+
+const protect = async (req, res, next) => {
+  let token;
+
+  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
+    try {
+      token = req.headers.authorization.split(' ')[1];
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-password');
+
+      if (!req.user) {
+        return res.status(401).json({ message: 'User no longer exists' });
+      }
+
+      next();
+    } catch (error) {
+      return res.status(401).json({ message: 'Not authorized, token failed' });
+    }
+  }
+
+  if (!token) {
+    return res.status(401).json({ message: 'Not authorized, no token provided' });
+  }
+};
+
+// NEW: checks that the logged-in user has the 'admin' role
+// This MUST run AFTER protect, since it relies on req.user already being set
+const admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next(); // user is an admin — allow the request through
+  } else {
+    res.status(403).json({ message: 'Access denied. Admin privileges required.' });
+  }
+};
+
+module.exports = { protect, admin };
