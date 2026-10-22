@@ -2,7 +2,7 @@ import axios from 'axios';
 
 // Uses the deployed backend in production, localhost in development
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'https://mern-ecommerce-n9l6.onrender.com/',
+  baseURL: import.meta.env.VITE_API_URL || 'https://mern-ecommerce-n9l6.onrender.com/api',
 });
 
 API.interceptors.request.use(
